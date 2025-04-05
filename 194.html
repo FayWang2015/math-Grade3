@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>同头尾合10 & 同尾头合10 乘法PK赛</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive;
+            background: linear-gradient(to bottom, #B9F6CA, #E8F5E9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+       .container {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 15px rgba(152, 251, 152, 0.3);
+            width: 90%;
+            max-width: 600px;
+        }
+
+       .title {
+            color: #008000;
+            font-size: 30px;
+            margin: 20px 0 30px;
+            text-shadow: 2px 2px 5px rgba(0, 128, 0, 0.2);
+        }
+
+       .status {
+            font-size: 18px;
+            color: #666;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+       .question {
+            font-size: 22px;
+            margin: 20px 0 15px;
+            color: #333;
+            text-align: center;
+        }
+
+       .option-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            margin: 8px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+       .option-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+
+       .timer {
+            font-size: 20px;
+            color: #FF0000;
+            text-align: center;
+            margin: 20px 0 30px;
+            font-weight: bold;
+        }
+
+       .result-title {
+            font-size: 24px;
+            color: #008080;
+            margin-bottom: 15px;
+        }
+
+       .result-score {
+            font-size: 30px;
+            color: #FF4500;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+       .rank {
+            font-size: 18px;
+            color: #4B0082;
+            margin: 5px 0;
+        }
+
+       .group-result {
+            margin-top: 20px;
+            border-top: 1px solid #ccc;
+            padding-top: 20px;
+        }
+
+       .group-result h3 {
+            font-size: 20px;
+            color: #333;
+        }
+
+       .group-result p {
+            font-size: 16px;
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="title">📚 同头尾合10 & 同尾头合10 乘法PK赛 📚</h1>
+        <div class="status" id="status"></div>
+        <div class="question" id="questionDisplay"></div>
+        <div id="options" style="display: flex; flex-wrap: wrap; justify-content: center;"></div>
+        <div class="timer">剩余时间：<span id="timer">30</span>秒</div>
+        <div id="resultSection" style="display: none;">
+            <h2 class="result-title">挑战完成！快来看看成绩吧～</h2>
+            <div class="result-score">最终得分：<span id="finalScore">0</span>分</div>
+            <div class="rank" id="rankDisplay"></div>
+            <div class="group-result" id="groupResults"></div>
+            <div class="student-info" style="font-size: 18px; color: #333; text-align: center; margin-top: 20px;">三（2）班 陈清蕊</div>
+            <button class="option-btn" onclick="restartGame()">再来一局！</button>
+        </div>
+    </div>
+
+    <audio id="correctSound" src="https://assets.mixkit.co/active_storage/sfx/3160/3160-preview.mp3"></audio>
+    <audio id="wrongSound" src="https://assets.mixkit.co/active_storage/sfx/2705/2705-preview.mp3"></audio>
+
+    <script>
+        // 题目数据（包含题型分类）
+        const questions = [
+            // 同头尾合10题型（头相同，尾合10）
+            { id: 1, equation: "23×27", answer: 621, type: '同头' },
+            { id: 2, equation: "34×36", answer: 1224, type: '同头' },
+            { id: 3, equation: "42×48", answer: 2016, type: '同头' },
+            { id: 4, equation: "51×59", answer: 3009, type: '同头' },
+            { id: 5, equation: "65×65", answer: 4225, type: '同头' },
+            { id: 6, equation: "73×77", answer: 5621, type: '同头' },
+            { id: 7, equation: "84×86", answer: 7224, type: '同头' },
+            { id: 8, equation: "92×98", answer: 9016, type: '同头' },
+            { id: 9, equation: "14×16", answer: 224, type: '同头' },
+            { id: 10, equation: "21×29", answer: 609, type: '同头' },
+            // 同尾头合10题型（尾相同，头合10）
+            { id: 11, equation: "34×74", answer: 2516, type: '同尾' },
+            { id: 12, equation: "27×87", answer: 2349, type: '同尾' },
+            { id: 13, equation: "46×66", answer: 3036, type: '同尾' },
+            { id: 14, equation: "15×95", answer: 1425, type: '同尾' },
+            { id: 15, equation: "58×58", answer: 3364, type: '同尾' },
+            { id: 16, equation: "63×43", answer: 2709, type: '同尾' },
+            { id: 17, equation: "72×32", answer: 2304, type: '同尾' },
+            { id: 18, equation: "81×21", answer: 1701, type: '同尾' },
+            { id: 19, equation: "96×16", answer: 1536, type: '同尾' },
+            { id: 20, equation: "49×69", answer: 3381, type: '同尾' },
+        ];
+
+        let currentGroup = 0;
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timerInterval;
+        let groups = [];
+        let groupScores = [];
+        let remainingTime = 30; // 新增变量，用于记录每组剩余时间
+        const groupNames = ['智慧先锋队', '勇敢挑战者', '思维开拓者', '实力冲锋队'];
+        const questionsPerGroup = 5;
+
+        function initGame() {
+            currentGroup = 0;
+            currentQuestionIndex = 0;
+            score = 0;
+            groupScores = [];
+            remainingTime = 30; // 初始化每组剩余时间
+            document.getElementById('resultSection').style.display = 'none';
+            document.getElementById('questionDisplay').style.display = 'block';
+            document.getElementById('options').style.display = 'flex';
+            document.getElementById('timer').style.display = 'block';
+
+            const shuffled = [...questions].sort(() => Math.random() - 0.5);
+            groups = [];
+            const numGroups = groupNames.length;
+            for (let i = 0; i < numGroups; i++) {
+                const start = i * questionsPerGroup;
+                const end = start + questionsPerGroup;
+                groups[i] = shuffled.slice(start, end);
+            }
+
+            showGroupName();
+        }
+
+        function showGroupName() {
+            const groupNumber = currentGroup + 1;
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = `第${groupNumber}组 - 【${groupNames[currentGroup]}】准备好迎接挑战了吗？`;
+            document.getElementById('questionDisplay').textContent = '点击开始进入答题！';
+            const optionsElement = document.getElementById('options');
+            optionsElement.innerHTML = '';
+
+            const startBtn = document.createElement('button');
+            startBtn.className = 'option-btn';
+            startBtn.textContent = '我准备好了！';
+            startBtn.onclick = startGroup;
+            optionsElement.appendChild(startBtn);
+        }
+
+        function startGroup() {
+            const groupNumber = currentGroup + 1;
+            currentQuestionIndex = 0;
+            remainingTime = 30; // 每组开始时重置剩余时间
+            showQuestion(groups[currentGroup][currentQuestionIndex]);
+            startTimer(remainingTime);
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = `第${groupNumber}组 - 【${groupNames[currentGroup]}】答题开始！`;
+        }
+
+        function showQuestion(q) {
+            document.getElementById('questionDisplay').textContent = q.equation;
+            const optionsElement = document.getElementById('options');
+            optionsElement.innerHTML = '';
+
+            const correct = q.answer;
+            const wrong1 = generateConfusingWrongAnswer(correct);
+            const wrong2 = generateConfusingWrongAnswer(correct);
+            const allOptions = [correct, wrong1, wrong2].sort(() => Math.random() - 0.5);
+
+            allOptions.forEach(ans => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = ans;
+                btn.onclick = () => handleAnswer(ans, correct);
+                optionsElement.appendChild(btn);
+            });
+        }
+
+        function generateConfusingWrongAnswer(correct) {
+            let wrong;
+            const lastTwoDigits = correct % 100;
+            do {
+                const offset = Math.floor(Math.random() * 1000) + 1; // 1 - 1000 的随机偏移量
+                const sign = Math.random() < 0.5 ? -1 : 1; // 正负随机
+                wrong = Math.floor((correct + sign * offset) / 100) * 100 + lastTwoDigits;
+            } while (wrong === correct);
+            return wrong;
+        }
+
+        function handleAnswer(selected, correct) {
+            clearInterval(timerInterval);
+
+            if (selected === correct) {
+                score += 20;
+                if (!groupScores[currentGroup]) {
+                    groupScores[currentGroup] = 0;
+                }
+                groupScores[currentGroup] += 20;
+                document.getElementById('correctSound').play();
+                document.getElementById('status').textContent = '回答正确！✓';
+            } else {
+                document.getElementById('wrongSound').play();
+                document.getElementById('status').textContent = `哎呀，错了哦～正确答案是：${correct}`;
+            }
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < groups[currentGroup].length) {
+                    showQuestion(groups[currentGroup][currentQuestionIndex]);
+                    startTimer(remainingTime); // 继续使用剩余时间倒计时
+                } else {
+                    currentGroup++;
+                    if (currentGroup < groupNames.length) {
+                        showGroupName();
+                    } else {
+                        showResult();
+                    }
+                }
+            }, 1000);
+        }
+
+        function startTimer(seconds) {
+            const timerElement = document.getElementById('timer');
+            timerElement.textContent = seconds;
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                seconds--;
+                remainingTime = seconds; // 更新剩余时间
+                timerElement.textContent = seconds;
+                if (seconds <= 0) {
+                    clearInterval(timerInterval);
+                    document.getElementById('status').textContent = '时间到！自动进入下一组～';
+                    currentQuestionIndex = groups[currentGroup].length;
+                    handleAnswer(null, null);
+                }
+            }, 1000);
+        }
+
+        function showResult() {
+            document.getElementById('questionDisplay').style.display = 'none';
+            document.getElementById('options').style.display = 'none';
+            document.getElementById('timer').style.display = 'none';
+            document.getElementById('resultSection').style.display = 'block';
+
+            document.getElementById('finalScore').textContent = score;
+            const rank = getRank(score);
+            document.getElementById('rankDisplay').textContent = `获得称号：${rank.title} 🏆\n用时参考：${rank.time}`;
+
+            const groupResultsDiv = document.getElementById('groupResults');
+            groupResultsDiv.innerHTML = '';
+            groupScores.forEach((groupScore, index) => {
+                const groupNumber = index + 1;
+                const groupResult = document.createElement('div');
+                groupResult.innerHTML = `<h3>第${groupNumber}组 - 【${groupNames[index]}】得分：${groupScore} 分</h3>`;
+                groupResultsDiv.appendChild(groupResult);
+            });
+        }
+
+        function getRank(score) {
+            const rankings = [
+                { title: "数学小状元", score: 100, time: "2分30秒" },
+                { title: "速算小能手", score: 80, time: "3分10秒" },
+                { title: "计算小达人", score: 60, time: "4分00秒" },
+                { title: "潜力新星", score: 40, time: "4分50秒" },
+                { title: "进步小标兵", score: 20, time: "5分30秒" },
+                { title: "继续加油哦", score: 0, time: "无" }
+            ];
+            return rankings.find(r => score >= r.score) || rankings[rankings.length - 1];
+        }
+
+        function restartGame() {
+            initGame();
+        }
+
+        initGame();
+    </script>
+</body>
+
+</html>    
